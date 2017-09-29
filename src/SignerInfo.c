@@ -3,7 +3,7 @@
 */
 
 #include <stdlib.h>
-#include <memory.h>
+#include <string.h>
 
 #include "cose.h"
 #include "cose_int.h"
@@ -179,6 +179,8 @@ bool _COSE_Signer_sign(COSE_SignerInfo * pSigner, const cn_cbor * pcborBody, con
 	int alg;
 	bool fRet = false;
 
+    (void)f;
+
 	pArray = cn_cbor_array_create(CBOR_CONTEXT_PARAM_COMMA NULL);
 	CHECK_CONDITION(pArray != NULL, COSE_ERR_OUT_OF_MEMORY);
 
@@ -274,6 +276,7 @@ bool COSE_Signer_SetExternal(HCOSE_SIGNER hcose, const byte * pbExternalData, si
 
 bool _COSE_Signer_validate(COSE_SignMessage * pSign, COSE_SignerInfo * pSigner, const cn_cbor * pcborBody, const cn_cbor * pcborProtected, cose_errback * perr)
 {
+    (void)pSign;
 	byte * pbToBeSigned = NULL;
 	int alg;
 	const cn_cbor * cn = NULL;

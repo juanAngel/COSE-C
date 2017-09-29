@@ -310,6 +310,7 @@ errorReturn:
 
 bool _COSE_Signer0_sign(COSE_Sign0Message * pSigner, const cn_cbor * pKey, cose_errback * perr)
 {
+    (void)pKey;
 #ifdef USE_CBOR_CONTEXT
 	cn_cbor_context * context = &pSigner->m_message.m_allocContext;
 #endif
@@ -378,6 +379,7 @@ bool _COSE_Signer0_sign(COSE_Sign0Message * pSigner, const cn_cbor * pKey, cose_
 
 bool _COSE_Signer0_validate(COSE_Sign0Message * pSign, const cn_cbor * pKey, cose_errback * perr)
 {
+    (void)pKey;
 	byte * pbToSign = NULL;
 	int alg;
 	const cn_cbor * cn = NULL;

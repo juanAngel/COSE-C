@@ -3,7 +3,11 @@
 #
 
 if (use_embedtls)
-  set (cose_crypto mbedtls.c)
+    if(MICROCHIP_XC32_PATH)
+        set (cose_crypto pic32dtls.c)
+    else()
+        set (cose_crypto mbedtls.c)
+    endif()
 else ()
   set (cose_crypto openssl.c)
 endif()
@@ -19,6 +23,10 @@ set ( cose_sources
         Encrypt0.c
 	Recipient.c
 	SignerInfo.c
+        configure.h
+        cose_int.h
+        cose.h
+        crypto.h
         ${cose_crypto}
 )
 
@@ -36,7 +44,7 @@ target_include_directories ( cose-c PRIVATE ../src )
 target_link_libraries ( cose-c PRIVATE ${OPENSSL_LIBRARIES} )
 target_link_libraries ( cose-c PRIVATE cn-cbor )
 if (use_embedtls)
-    target_include_directories ( cose-c PUBLIC ${CMAKE_SHARED_MODLE_PREFIX}embedtls${CMAKE_SHARED_LIBRARY_SUFFIX}/include )
+    #target_include_directories ( cose-c PUBLIC ${CMAKE_SHARED_MODLE_PREFIX}embedtls${CMAKE_SHARED_LIBRARY_SUFFIX}/include )
     target_link_libraries ( cose-c PRIVATE embedtls )
 endif()
 

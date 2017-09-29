@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <memory.h>
+//#include <memory.h>
 
 #include "cose.h"
 #include "cose_int.h"
@@ -334,7 +334,7 @@ cn_cbor * _COSE_encode_protected(COSE * pMessage, cose_errback * perr)
 		pbProtected = (byte *)COSE_CALLOC(cbProtected, 1, context);
 		CHECK_CONDITION(pbProtected != NULL, COSE_ERR_OUT_OF_MEMORY);
 
-		CHECK_CONDITION(cn_cbor_encoder_write(pbProtected, 0, cbProtected, pMessage->m_protectedMap) == cbProtected, COSE_ERR_CBOR);
+        CHECK_CONDITION((long)cn_cbor_encoder_write(pbProtected, 0, cbProtected, pMessage->m_protectedMap) == cbProtected, COSE_ERR_CBOR);
 	}
 	else {
 		cbProtected = 0;

@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <memory.h>
+#include <string.h>
 
 #include "cose.h"
 #include "cose_int.h"
@@ -228,6 +228,8 @@ errorReturn:
 
 bool _COSE_Recipient_decrypt(COSE_RecipientInfo * pRecip, COSE_RecipientInfo * pRecipUse, int algIn, size_t cbitKeyOut, byte * pbKeyOut, cose_errback * perr)
 {
+    (void)algIn;
+    (void)pRecipUse;
 	int alg;
 	const cn_cbor * cn = NULL;
 	COSE_RecipientInfo * pRecip2;
@@ -244,6 +246,9 @@ bool _COSE_Recipient_decrypt(COSE_RecipientInfo * pRecip, COSE_RecipientInfo * p
 	byte * pbKeyX = NULL;
 	int cbitKeyX = 0;
 	byte rgbKey[256 / 8];
+
+    (void)cbKey2;
+    (void)rgbKey;
 
 	UNUSED(pcose);
 
@@ -273,7 +278,7 @@ bool _COSE_Recipient_decrypt(COSE_RecipientInfo * pRecip, COSE_RecipientInfo * p
 		CHECK_CONDITION(pRecip->m_pkey != NULL, COSE_ERR_INVALID_PARAMETER);
 		cn = cn_cbor_mapget_int(pRecip->m_pkey, -1);
 		CHECK_CONDITION((cn != NULL) && (cn->type == CN_CBOR_BYTES), COSE_ERR_INVALID_PARAMETER);
-		CHECK_CONDITION((cn->length == (unsigned int)cbitKeyOut / 8), COSE_ERR_INVALID_PARAMETER);
+        CHECK_CONDITION((((unsigned)cn->length) == (unsigned int)cbitKeyOut / 8), COSE_ERR_INVALID_PARAMETER);
 		memcpy(pbKeyOut, cn->v.bytes, cn->length);
 
 		return true;
@@ -550,6 +555,8 @@ bool _COSE_Recipient_decrypt(COSE_RecipientInfo * pRecip, COSE_RecipientInfo * p
 
 bool _COSE_Recipient_encrypt(COSE_RecipientInfo * pRecipient, const byte * pbContent, size_t cbContent, cose_errback * perr)
 {
+    (void)pbContent;
+    (void)cbContent;
 	int alg;
 	int t = 0;
 	COSE_RecipientInfo * pri;
@@ -851,6 +858,7 @@ errorReturn:
 
 byte * _COSE_RecipientInfo_generateKey(COSE_RecipientInfo * pRecipient, int algIn, size_t cbitKeySize, cose_errback * perr)
 {
+    (void)algIn;
 	int alg;
 	const cn_cbor * cn_Alg = _COSE_map_get_int(&pRecipient->m_encrypt.m_message, COSE_Header_Algorithm, COSE_BOTH, perr);
 	byte * pbContext = NULL;
@@ -875,7 +883,7 @@ byte * _COSE_RecipientInfo_generateKey(COSE_RecipientInfo * pRecipient, int algI
 		CHECK_CONDITION(pRecipient->m_pkey != NULL, COSE_ERR_INVALID_PARAMETER);
 			pK = cn_cbor_mapget_int(pRecipient->m_pkey, -1);
 			CHECK_CONDITION((pK != NULL) && (pK->type == CN_CBOR_BYTES), COSE_ERR_INVALID_PARAMETER);
-			CHECK_CONDITION(pK->length == cbitKeySize / 8, COSE_ERR_INVALID_PARAMETER);
+            CHECK_CONDITION(((unsigned)pK->length) == cbitKeySize / 8, COSE_ERR_INVALID_PARAMETER);
 			memcpy(pb, pK->v.bytes, cbitKeySize / 8);
 	break;
 
