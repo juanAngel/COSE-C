@@ -4,10 +4,11 @@
 #include "crypto.h"
 
 #include <assert.h>
-#include <memory.h>
+#include <string.h>
 #include <stdbool.h>
 
 #ifdef USE_OPEN_SSL
+
 
 #include <openssl/evp.h>
 #include <openssl/aes.h>

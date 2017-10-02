@@ -23,6 +23,7 @@ option (coveralls       "Generate coveralls data" ON)
 option ( coveralls_send "Send data to coveralls site" OFF )
 option (build_docs      "Create docs using Doxygen" ${DOXYGEN_FOUND} )
 option (build_shared_libs "Build Shared Libraries" ON)
+option (build_dumper "Build Dumper tool" ON)
 option (use_embedtls    "Use MBedTLS for the Crypto Package" OFF)
 
 find_package(Doxygen)
@@ -147,6 +148,10 @@ endif ()
 
 ## include the parts
 add_subdirectory(src)
-add_subdirectory(test)
-add_subdirectory(dumper)
 
+if(BUILD_TESTING)
+    add_subdirectory(test)
+endif()
+if(build_dumper)
+    add_subdirectory(dumper)
+endif()
