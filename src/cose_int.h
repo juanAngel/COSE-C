@@ -124,7 +124,7 @@ typedef struct _COSE_COUNTER_SIGN {
 * @param  free_func [description]
 * @return           [description]
 */
-#define COSE_FREE(ptr, ctx) ((((ctx) && (ctx)->free_func)) ? \
+#define COSE_FREE(ptr, ctx) ((((ctx)!=NULL && (ctx)->free_func)) ? \
     ((ctx)->free_func((ptr), (ctx)->context)) : \
     free((ptr)))
 
