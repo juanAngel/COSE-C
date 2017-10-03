@@ -39,7 +39,7 @@ add_library ( cose-c ${LIB_TYPE} ${cose_sources} )
 
 target_include_directories ( cose-c PRIVATE ${OPENSSL_INCLUDE_DIR} )
 target_include_directories ( cose-c PUBLIC ${dist_dir}/include )
-target_include_directories ( cose-c PRIVATE ../src )
+target_include_directories ( cose-c PUBLIC ${CMAKE_CURRENT_LIST_DIR}/ )
 
 target_link_libraries ( cose-c PRIVATE ${OPENSSL_LIBRARIES} )
 target_link_libraries ( cose-c PRIVATE cn-cbor )
