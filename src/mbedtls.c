@@ -4,7 +4,7 @@
 #include "crypto.h"
 
 #include <assert.h>
-#include <memory.h>
+#include <string.h>
 
 #ifdef USE_MBED_TLS
 

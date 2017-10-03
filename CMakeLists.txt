@@ -128,7 +128,7 @@ endif()
 
 if (use_embedtls)
    add_definitions( -DUSE_MBED_TLS )
-   if(NOT TARGET cn-cbor)
+   if(NOT TARGET mbedtls)
        ExternalProject_Add(
          project_embedtls
          GIT_REPOSITORY https://github.com/ARMmbed/mbedtls
