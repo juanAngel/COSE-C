@@ -1,4 +1,9 @@
+#ifndef COSE_INT_H
+#define COSE_INT_H
+
 #include <assert.h>
+#include <cose.h>
+#include <cn-cbor/cn-cbor.h>
 
 // These definitions are here because they aren't required for the public
 // interface, and they were quite confusing in cn-cbor.h
@@ -280,3 +285,5 @@ enum {
 
 
 #define COSE_CounterSign_object 1000
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef COSE_H
+#define COSE_H
+
 #include <cn-cbor/cn-cbor.h>
 #include "configure.h"
 typedef unsigned char byte;
@@ -336,3 +339,4 @@ extern cn_cbor * cn_cbor_tag_create(int tag, cn_cbor * child, CBOR_CONTEXT_COMMA
 extern cn_cbor * cn_cbor_bool_create(int boolValue, CBOR_CONTEXT_COMMA cn_cbor_errback * errp);
 extern cn_cbor * cn_cbor_null_create(CBOR_CONTEXT_COMMA cn_cbor_errback * errp);
 
+#endif

@@ -1,3 +1,10 @@
+#ifndef COSE_CRYPTO_H
+#define COSE_CRYPTO_H
+
+
+#include <stdlib.h>
+#include <cose_int.h>
+#include <cn-cbor/cn-cbor.h>
 /**
 * Perform an AES-CCM Decryption operation
 *
@@ -73,3 +80,6 @@ bool ECDH_ComputeSecret(COSE * pReciient, cn_cbor ** ppKeyMe, const cn_cbor * pK
 * @return                  none
 */
 void rand_bytes(byte * pb, size_t cb);
+
+
+#endif //COSE_CRYPTO_H
