@@ -26,6 +26,10 @@ option (build_shared_libs "Build Shared Libraries" ON)
 option (build_dumper "Build Dumper tool" ON)
 option (use_embedtls    "Use MBedTLS for the Crypto Package" OFF)
 
+option (use_ecdsa_sha256 "Use ecdsa which sha256" OFF)
+option (use_ecdsa_sha384 "Use ecdsa which sha384" OFF)
+option (use_ecdsa_sha512 "Use ecdsa which sha512" OFF)
+
 find_package(Doxygen)
 if(NOT use_embedtls)
     find_package(OpenSSL 1.0 REQUIRED)

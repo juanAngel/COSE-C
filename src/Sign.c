@@ -3,6 +3,7 @@
 */
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "cose.h"
 #include "cose_int.h"
@@ -231,8 +232,7 @@ bool COSE_Sign_Sign(HCOSE_SIGN h, cose_errback * perr)
 	const cn_cbor * pcborProtected;
 
 	if (!IsValidSignHandle(h)) {
-		CHECK_CONDITION(false, COSE_ERR_INVALID_HANDLE);
-	errorReturn:
+        CHECK_CONDITION(false, COSE_ERR_INVALID_HANDLE);
 		return false;
 	}
 #ifdef USE_CBOR_CONTEXT
@@ -243,13 +243,19 @@ bool COSE_Sign_Sign(HCOSE_SIGN h, cose_errback * perr)
 	CHECK_CONDITION((pcborBody != NULL) && (pcborBody->type == CN_CBOR_BYTES), COSE_ERR_INVALID_PARAMETER);
 
 	pcborProtected = _COSE_encode_protected(&pMessage->m_message, perr);
-	if (pcborProtected == NULL) goto errorReturn;
+    if (pcborProtected == NULL){
+        return false;
+    }
 
 	for (pSigner = pMessage->m_signerFirst; pSigner != NULL; pSigner = pSigner->m_signerNext) {
-		if (!_COSE_Signer_sign(pSigner, pcborBody, pcborProtected, perr)) goto errorReturn;
+        if (!_COSE_Signer_sign(pSigner, pcborBody, pcborProtected, perr)){
+            return false;
+        }
 	}
 
 	return true;
+ errorReturn:
+    return false;
 }
 
 bool COSE_Sign_validate(HCOSE_SIGN hSign, HCOSE_SIGNER hSigner, cose_errback * perr)

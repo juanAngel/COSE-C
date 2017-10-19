@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "cose.h"
 #include "cose_int.h"
@@ -185,21 +186,25 @@ bool _COSE_Signer_sign(COSE_SignerInfo * pSigner, const cn_cbor * pcborBody, con
 	CHECK_CONDITION(pArray != NULL, COSE_ERR_OUT_OF_MEMORY);
 
 	cnAlgorithm = _COSE_map_get_int(&pSigner->m_message, COSE_Header_Algorithm, COSE_BOTH, perr);
-	if (cnAlgorithm == NULL) goto errorReturn;
+    if (cnAlgorithm == NULL){
+        goto errorReturn;
+    }
 
 	if (cnAlgorithm->type == CN_CBOR_TEXT) {
 		FAIL_CONDITION(COSE_ERR_UNKNOWN_ALGORITHM);
-	}
-	else {
+    }else {
 		CHECK_CONDITION((cnAlgorithm->type == CN_CBOR_UINT || cnAlgorithm->type == CN_CBOR_INT), COSE_ERR_INVALID_PARAMETER);
 
 		alg = (int)cnAlgorithm->v.sint;
 	}
 
 	pcborProtectedSign = _COSE_encode_protected(&pSigner->m_message, perr);
-	if (pcborProtectedSign == NULL) goto errorReturn;
+    if (pcborProtectedSign == NULL)
+        goto errorReturn;
 
-	if (!BuildToBeSigned(&pbToSign, &cbToSign, pcborBody, pcborProtected, pcborProtectedSign, pSigner->m_message.m_pbExternal, pSigner->m_message.m_cbExternal, CBOR_CONTEXT_PARAM_COMMA perr)) goto errorReturn;
+    if (!BuildToBeSigned(&pbToSign, &cbToSign, pcborBody, pcborProtected, pcborProtectedSign, pSigner->m_message.m_pbExternal, pSigner->m_message.m_cbExternal, CBOR_CONTEXT_PARAM_COMMA perr)){
+        goto errorReturn;
+    }
 
 	switch (alg) {
 #ifdef USE_ECDSA_SHA_256
@@ -220,15 +225,17 @@ bool _COSE_Signer_sign(COSE_SignerInfo * pSigner, const cn_cbor * pcborBody, con
 		break;
 #endif
 
-	default:
+    default:
 		FAIL_CONDITION(COSE_ERR_UNKNOWN_ALGORITHM);
 	}
 
 	fRet = true;
 
 errorReturn:
-	if (pArray != NULL) COSE_FREE(pArray, context);
-	if (pbToSign != NULL) COSE_FREE(pbToSign, context);
+    if (pArray != NULL)
+        COSE_FREE(pArray, context);
+    if (pbToSign != NULL)
+        COSE_FREE(pbToSign, context);
 	return fRet;
 }
 
@@ -291,7 +298,9 @@ bool _COSE_Signer_validate(COSE_SignMessage * pSign, COSE_SignerInfo * pSigner, 
 #endif
 
 	cn = _COSE_map_get_int(&pSigner->m_message, COSE_Header_Algorithm, COSE_BOTH, perr);
-	if (cn == NULL) goto errorReturn;
+    if (cn == NULL){
+        goto errorReturn;
+    }
 
 	if (cn->type == CN_CBOR_TEXT) {
 		FAIL_CONDITION(COSE_ERR_UNKNOWN_ALGORITHM);
@@ -309,7 +318,9 @@ bool _COSE_Signer_validate(COSE_SignMessage * pSign, COSE_SignerInfo * pSigner, 
 	CHECK_CONDITION((cnProtected != NULL) && (cnProtected->type == CN_CBOR_BYTES), COSE_ERR_INVALID_PARAMETER);
 
 	//  Build authenticated data
-	if (!BuildToBeSigned(&pbToBeSigned, &cbToBeSigned, pcborBody, pcborProtected, cnProtected, pSigner->m_message.m_pbExternal, pSigner->m_message.m_cbExternal, CBOR_CONTEXT_PARAM_COMMA perr)) goto errorReturn;
+    if (!BuildToBeSigned(&pbToBeSigned, &cbToBeSigned, pcborBody, pcborProtected, cnProtected, pSigner->m_message.m_pbExternal, pSigner->m_message.m_cbExternal, CBOR_CONTEXT_PARAM_COMMA perr)){
+        goto errorReturn;
+    }
 
 	cn_cbor * cnSignature = _COSE_arrayget_int(&pSigner->m_message, INDEX_SIGNATURE);
 	CHECK_CONDITION((cnSignature != NULL) && (cnSignature->type == CN_CBOR_BYTES), COSE_ERR_INVALID_PARAMETER);
@@ -317,19 +328,22 @@ bool _COSE_Signer_validate(COSE_SignMessage * pSign, COSE_SignerInfo * pSigner, 
 	switch (alg) {
 #ifdef USE_ECDSA_SHA_256
 	case COSE_Algorithm_ECDSA_SHA_256:
-		if (!ECDSA_Verify(&pSigner->m_message, INDEX_SIGNATURE, pSigner->m_pkey, 256, pbToBeSigned, cbToBeSigned, perr)) goto errorReturn;
+        if (!ECDSA_Verify(&pSigner->m_message, INDEX_SIGNATURE, pSigner->m_pkey, 256, pbToBeSigned, cbToBeSigned, perr))
+            goto errorReturn;
 		break;
 #endif
 
 #ifdef USE_ECDSA_SHA_384
 	case COSE_Algorithm_ECDSA_SHA_384:
-		if (!ECDSA_Verify(&pSigner->m_message, INDEX_SIGNATURE, pSigner->m_pkey, 384, pbToBeSigned, cbToBeSigned, perr)) goto errorReturn;
+        if (!ECDSA_Verify(&pSigner->m_message, INDEX_SIGNATURE, pSigner->m_pkey, 384, pbToBeSigned, cbToBeSigned, perr))
+            goto errorReturn;
 		break;
 #endif
 
 #ifdef USE_ECDSA_SHA_512
 	case COSE_Algorithm_ECDSA_SHA_512:
-		if (!ECDSA_Verify(&pSigner->m_message, INDEX_SIGNATURE, pSigner->m_pkey, 512, pbToBeSigned, cbToBeSigned, perr)) goto errorReturn;
+        if (!ECDSA_Verify(&pSigner->m_message, INDEX_SIGNATURE, pSigner->m_pkey, 512, pbToBeSigned, cbToBeSigned, perr))
+            goto errorReturn;
 		break;
 #endif
 

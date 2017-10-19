@@ -39,9 +39,24 @@ target_include_directories ( cose-c PUBLIC ${CMAKE_CURRENT_LIST_DIR}/ )
 
 target_link_libraries ( cose-c PRIVATE ${OPENSSL_LIBRARIES} )
 target_link_libraries ( cose-c PRIVATE cn-cbor )
+
+if(use_ecdsa_sha256)
+    target_compile_definitions(cose-c PUBLIC USE_ECDSA_SHA_256)
+endif()
+
+
+if(use_ecdsa_sha384)
+    target_compile_definitions(cose-c PUBLIC USE_ECDSA_SHA_384)
+endif()
+
+
+if(use_ecdsa_sha512)
+    target_compile_definitions(cose-c PUBLIC USE_ECDSA_SHA_512)
+endif()
+
 if (use_embedtls)
     if(TARGET mbedcrypto)
-        target_link_libraries ( cose-c PRIVATE mbedcrypto)
+        target_link_libraries ( cose-c PRIVATE mbedcrypto tinycrypt)
     else()
         target_link_libraries ( cose-c PRIVATE embedtls)
     endif()
