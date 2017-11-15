@@ -90,7 +90,8 @@ HCOSE_ENCRYPT _COSE_Encrypt_Init_From_Object(cn_cbor * cbor, COSE_Encrypt * pIn,
 bool COSE_Encrypt_Free(HCOSE_ENCRYPT h)
 {
 #ifdef USE_CBOR_CONTEXT
-	cn_cbor_context context;
+	cn_cbor_context context,*pContext;
+	pContext = &context;
 #endif
 	COSE_Encrypt * pEncrypt = (COSE_Encrypt *)h;
 
@@ -98,13 +99,14 @@ bool COSE_Encrypt_Free(HCOSE_ENCRYPT h)
 
 #ifdef USE_CBOR_CONTEXT
 	context = ((COSE_Encrypt *)h)->m_message.m_allocContext;
+	(void)context;
 #endif
 
 	_COSE_Encrypt_Release(pEncrypt);
 
 	_COSE_RemoveFromList(&EncryptRoot, &pEncrypt->m_message);
 	
-	COSE_FREE((COSE_Encrypt *)h, &context);
+	COSE_FREE((COSE_Encrypt *)h, pContext);
 
 	return true;
 }

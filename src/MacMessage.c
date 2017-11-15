@@ -109,7 +109,8 @@ HCOSE_MAC _COSE_Mac_Init_From_Object(cn_cbor * cbor, COSE_MacMessage * pIn, CBOR
 bool COSE_Mac_Free(HCOSE_MAC h)
 {
 #ifdef USE_CBOR_CONTEXT
-	cn_cbor_context context;
+	cn_cbor_context context,*pContext;
+	pContext = &context;
 #endif
 	COSE_MacMessage * p = (COSE_MacMessage *)h;
 
@@ -128,7 +129,7 @@ bool COSE_Mac_Free(HCOSE_MAC h)
 
 	_COSE_Mac_Release((COSE_MacMessage *)h);
 
-	COSE_FREE((COSE_MacMessage *)h, &context);
+	COSE_FREE((COSE_MacMessage *)h, pContext);
 
 	return true;
 }

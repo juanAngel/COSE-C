@@ -89,7 +89,8 @@ errorReturn:
 bool COSE_Sign0_Free(HCOSE_SIGN0 h)
 {
 #ifdef USE_CBOR_CONTEXT
-	cn_cbor_context context;
+	cn_cbor_context context,*pContext;
+	pContext = &context;
 #endif
 	COSE_Sign0Message * pMessage = (COSE_Sign0Message *)h;
 
@@ -105,11 +106,12 @@ bool COSE_Sign0_Free(HCOSE_SIGN0 h)
 
 #ifdef USE_CBOR_CONTEXT
 	context = pMessage->m_message.m_allocContext;
+	(void)context;
 #endif
 
 	_COSE_Sign0_Release(pMessage);
 
-	COSE_FREE(pMessage, &context);
+	COSE_FREE(pMessage, pContext);
 
 	return true;
 }

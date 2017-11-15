@@ -119,7 +119,8 @@ HCOSE_ENVELOPED _COSE_Enveloped_Init_From_Object(cn_cbor * cbor, COSE_Enveloped 
 bool COSE_Enveloped_Free(HCOSE_ENVELOPED h)
 {
 #ifdef USE_CBOR_CONTEXT
-	cn_cbor_context context;
+	cn_cbor_context context,*pContext;
+	pContext = &context;
 #endif
 	COSE_Enveloped * p = (COSE_Enveloped *)h;
 
@@ -132,13 +133,14 @@ bool COSE_Enveloped_Free(HCOSE_ENVELOPED h)
 
 #ifdef USE_CBOR_CONTEXT
 	context = ((COSE_Enveloped *)h)->m_message.m_allocContext;
+	(void)context;
 #endif
 
 	_COSE_RemoveFromList(&EnvelopedRoot, &p->m_message);
 
 	_COSE_Enveloped_Release((COSE_Enveloped *)h);
 
-	COSE_FREE((COSE_Enveloped *)h, &context);
+	COSE_FREE((COSE_Enveloped *)h, pContext);
 
 	return true;
 }
