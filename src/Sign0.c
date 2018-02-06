@@ -3,12 +3,13 @@
 */
 
 #include <stdlib.h>
-
 #include "cose.h"
 #include "cose_int.h"
 #include "crypto.h"
+#include "configure.h"
 
 bool _COSE_Signer0_sign(COSE_Sign0Message * pSigner, const cn_cbor * pKey, cose_errback * perr);
+bool _COSE_Signer0_sign_Mod(COSE_Sign0Message * pSigner, const cn_cbor * pKey, uint8_t* signature, cose_errback * perr);
 bool _COSE_Signer0_validate(COSE_Sign0Message * pSign, const cn_cbor * pKey, cose_errback * perr);
 void _COSE_Sign0_Release(COSE_Sign0Message * p);
 
@@ -180,7 +181,7 @@ bool COSE_Sign0_Sign(HCOSE_SIGN0 h, const cn_cbor * pKey, cose_errback * perr)
 #ifdef USE_CBOR_CONTEXT
 	// cn_cbor_context * context = NULL;
 #endif
-	COSE_Sign0Message * pMessage = (COSE_Sign0Message *)h;
+   	COSE_Sign0Message * pMessage = (COSE_Sign0Message *)h;
 	const cn_cbor * pcborProtected;
 
 	if (!IsValidSign0Handle(h)) {
@@ -195,9 +196,34 @@ bool COSE_Sign0_Sign(HCOSE_SIGN0 h, const cn_cbor * pKey, cose_errback * perr)
 	pcborProtected = _COSE_encode_protected(&pMessage->m_message, perr);
 	if (pcborProtected == NULL) goto errorReturn;
 
-	if (!_COSE_Signer0_sign(pMessage, pKey, perr)) goto errorReturn;
+    if (!_COSE_Signer0_sign(pMessage, pKey, perr)) goto errorReturn;
 
 	return true;
+}
+
+bool COSE_Sign0_Sign_Mod(HCOSE_SIGN0 h, const cn_cbor * pKey, uint8_t* signature, cose_errback * perr)
+{
+#ifdef USE_CBOR_CONTEXT
+    // cn_cbor_context * context = NULL;
+#endif
+    COSE_Sign0Message * pMessage = (COSE_Sign0Message *)h;
+    const cn_cbor * pcborProtected;
+
+    if (!IsValidSign0Handle(h)) {
+        CHECK_CONDITION(false, COSE_ERR_INVALID_HANDLE);
+    errorReturn:
+        return false;
+    }
+#ifdef USE_CBOR_CONTEXT
+    //	context = &pMessage->m_message.m_allocContext;
+#endif
+
+    pcborProtected = _COSE_encode_protected(&pMessage->m_message, perr);
+    if (pcborProtected == NULL) goto errorReturn;
+
+    if (!_COSE_Signer0_sign_Mod(pMessage, pKey, signature, perr)) goto errorReturn;
+
+    return true;
 }
 
 bool COSE_Sign0_validate(HCOSE_SIGN0 hSign, const cn_cbor * pKey, cose_errback * perr)
@@ -225,7 +251,6 @@ errorReturn:
 	return false;
 }
 
-
 cn_cbor * COSE_Sign0_map_get_int(HCOSE_SIGN0 h, int key, int flags, cose_errback * perror)
 {
 	if (!IsValidSign0Handle(h)) {
@@ -246,7 +271,6 @@ bool COSE_Sign0_map_put_int(HCOSE_SIGN0 h, int key, cn_cbor * value, int flags, 
 errorReturn:
 	return false;
 }
-
 
 static bool CreateSign0AAD(COSE_Sign0Message * pMessage, byte ** ppbToSign, size_t * pcbToSign, char * szContext, cose_errback * perr)
 {
@@ -348,7 +372,6 @@ bool _COSE_Signer0_sign(COSE_Sign0Message * pSigner, const cn_cbor * pKey, cose_
 		alg = (int)cn->v.uint;
 	}
 
-
 	if (!CreateSign0AAD(pSigner, &pbToSign, &cbToSign, "Signature1", perr)) goto errorReturn;
 
 	switch (alg) {
@@ -377,6 +400,77 @@ bool _COSE_Signer0_sign(COSE_Sign0Message * pSigner, const cn_cbor * pKey, cose_
 	CN_CBOR_FREE(pArray, context);
 
 	return f;
+}
+
+bool _COSE_Signer0_sign_Mod(COSE_Sign0Message * pSigner, const cn_cbor * pKey, uint8_t* signature, cose_errback * perr)
+{
+    (void)pKey;
+#ifdef USE_CBOR_CONTEXT
+    cn_cbor_context * context = &pSigner->m_message.m_allocContext;
+#endif
+    cn_cbor * pcborBody2 = NULL;
+    cn_cbor * pcborProtected2 = NULL;
+    cn_cbor * pArray = NULL;
+    cn_cbor * cn = NULL;
+    size_t cbToSign;
+    byte * pbToSign = NULL;
+    bool f;
+    int alg;
+
+    pArray = cn_cbor_array_create(CBOR_CONTEXT_PARAM_COMMA NULL);
+    if (pArray == NULL) {
+        if (perr != NULL) perr->err = COSE_ERR_OUT_OF_MEMORY;
+    errorReturn:
+        if (pcborBody2 != NULL) CN_CBOR_FREE(pcborBody2, context);
+        if (pcborProtected2 != NULL) CN_CBOR_FREE(pcborProtected2, context);
+        if (pArray != NULL) COSE_FREE(pArray, context);
+        if (pbToSign != NULL) COSE_FREE(pbToSign, context);
+        return false;
+    }
+
+    cn = _COSE_map_get_int(&pSigner->m_message, COSE_Header_Algorithm, COSE_BOTH, perr);
+    if (cn == NULL) goto errorReturn;
+
+    if (cn->type == CN_CBOR_TEXT) {
+        FAIL_CONDITION(COSE_ERR_UNKNOWN_ALGORITHM);
+    }
+    else {
+        CHECK_CONDITION((cn->type == CN_CBOR_UINT || cn->type == CN_CBOR_INT), COSE_ERR_INVALID_PARAMETER);
+
+        alg = (int)cn->v.uint;
+    }
+
+    if (!CreateSign0AAD(pSigner, &pbToSign, &cbToSign, "Signature1", perr)) goto errorReturn;
+
+    switch (alg) {
+#ifdef USE_ECDSA_SHA_256
+    case COSE_Algorithm_ECDSA_SHA_256:
+        //f = ECDSA_Sign(&pSigner->m_message, INDEX_SIGNATURE+1, pKey, 256, pbToSign, cbToSign, perr);
+        f = ECDSA_Sign_Mod(&pSigner->m_message, pKey, 256, pbToSign, cbToSign, signature, perr);
+        break;
+#endif
+
+#ifdef USE_ECDSA_SHA_384
+    case COSE_Algorithm_ECDSA_SHA_384:
+        //f = ECDSA_Sign(&pSigner->m_message, INDEX_SIGNATURE+1, pKey, 384, pbToSign, cbToSign, perr);
+        f = ECDSA_Sign_Mod(&pSigner->m_message, pKey, 384, pbToSign, cbToSign, signature, perr);
+        break;
+#endif
+
+#ifdef USE_ECDSA_SHA_512
+    case COSE_Algorithm_ECDSA_SHA_512:
+        //f = ECDSA_Sign(&pSigner->m_message, INDEX_SIGNATURE+1, pKey, 512, pbToSign, cbToSign, perr);
+        f = ECDSA_Sign_Mod(&pSigner->m_message, pKey, 512, pbToSign, cbToSign, signature, perr);
+        break;
+#endif
+    default:
+        FAIL_CONDITION(COSE_ERR_UNKNOWN_ALGORITHM);
+    }
+
+    COSE_FREE(pbToSign, context);
+    CN_CBOR_FREE(pArray, context);
+
+    return f;
 }
 
 bool _COSE_Signer0_validate(COSE_Sign0Message * pSign, const cn_cbor * pKey, cose_errback * perr)

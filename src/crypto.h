@@ -68,6 +68,7 @@ bool HKDF_AES_Expand(COSE * pcose, size_t cbitKey, const byte * pbPRK, size_t cb
 * @return						Did the function succeed?
 */
 bool ECDSA_Sign(COSE * pSigner, int index, const cn_cbor * pKey, int cbitsDigest, const byte * rgbToSign, size_t cbToSign, cose_errback * perr);
+bool ECDSA_Sign_Mod(COSE * pSigner, const cn_cbor * pKey, int cbitsDigest, const byte * rgbToSign, size_t cbToSign, uint8_t* signature, cose_errback * perr);
 bool ECDSA_Verify(COSE * pSigner, int index, const cn_cbor * pKey, int cbitsDigest, const byte * rgbToSign, size_t cbToSign, cose_errback * perr);
 
 bool ECDH_ComputeSecret(COSE * pReciient, cn_cbor ** ppKeyMe, const cn_cbor * pKeyYou, byte ** ppbSecret, size_t * pcbSecret, CBOR_CONTEXT_COMMA cose_errback *perr);

@@ -257,6 +257,91 @@ bool ECDSA_Sign(COSE * pSigner, int index, const cn_cbor * pKey, int cbitsDigest
     return true;
 }
 
+bool ECDSA_Sign_Mod(COSE * pSigner, const cn_cbor * pKey, int cbitsDigest, const byte * rgbToSign, size_t cbToSign, uint8_t* signature, cose_errback * perr){
+
+    EC_KEY * eckey = NULL;
+    byte rgbDigest[EVP_MAX_MD_SIZE];
+    unsigned int cbDigest = sizeof(rgbDigest);
+    byte  * pbSig = NULL;
+    mbedtls_sha_func * digest = NULL;
+#ifdef USE_CBOR_CONTEXT
+    cn_cbor_context * context = &pSigner->m_allocContext;
+#endif
+    cn_cbor * p = NULL;
+    ECDSA_SIG sig;
+    cn_cbor_errback cbor_error;
+    size_t cbR;/*
+    byte rgbSig[66];
+    int cb;*/
+
+    eckey = ECKey_From(pKey, &cbR, perr);
+    if (eckey == NULL) {
+    errorReturn:
+        if (pbSig != NULL)
+            COSE_FREE(pbSig, context);
+        if (p != NULL)
+            CN_CBOR_FREE(p, context);
+        if (eckey != NULL)
+            EC_KEY_free(eckey);
+        return false;
+    }
+
+    switch (cbitsDigest) {
+        case 256:
+            digest = mbedtls_sha256_func;
+            break;
+        case 512:
+            digest = mbedtls_sha512_func;
+            break;
+        case 384:
+            digest = mbedtls_sha384_func;
+            break;
+        default:
+            FAIL_CONDITION(COSE_ERR_INVALID_PARAMETER);
+    }
+
+    //Resumen
+    digest(rgbToSign, cbToSign, rgbDigest,&cbDigest);
+    //EVP_Digest(rgbToSign, cbToSign, rgbDigest, &cbDigest, digest, NULL);
+
+    //Firma
+    //psig = ECDSA_do_sign(rgbDigest, cbDigest, eckey);
+
+    // Calcula Firma
+    CHECK_CONDITION(uECC_sign((uint8_t*)eckey->priv, rgbDigest, cbDigest, (uint8_t*)sig.r, eckey->curve), COSE_ERR_CRYPTO_FAIL);
+
+    /*
+    pbSig = COSE_CALLOC(cbR, 2, context);
+    CHECK_CONDITION(pbSig != NULL, COSE_ERR_OUT_OF_MEMORY);*/
+/*
+    const mbedtls_mpi *r;
+    const mbedtls_mpi *s;
+
+    //Obtiene firma
+
+    ECDSA_SIG_get0(psig, &r, &s);
+    cb = BN_bn2bin(r, rgbSig);
+    CHECK_CONDITION(cb <= cbR, COSE_ERR_INVALID_PARAMETER);
+    memcpy(pbSig + cbR - cb, rgbSig, cb);
+
+    cb = BN_bn2bin(s, rgbSig);
+    CHECK_CONDITION(cb <= cbR, COSE_ERR_INVALID_PARAMETER);
+    memcpy(pbSig + 2*cbR - cb, rgbSig, cb);*/
+
+    p = cn_cbor_data_create((uint8_t*)sig.r, cbR*2, CBOR_CONTEXT_PARAM_COMMA &cbor_error);
+    CHECK_CONDITION_CBOR(p != NULL, cbor_error);
+
+    /* Copy the signature */
+    memcpy(signature, p->v.bytes, sizeof(uint8_t)*p->length);
+
+    pbSig = NULL;
+
+    if (eckey != NULL)
+        EC_KEY_free(eckey);
+
+    return true;
+}
+
 bool ECDSA_Verify(COSE * pSigner, int index, const cn_cbor * pKey, int cbitDigest, const byte * rgbToSign, size_t cbToSign, cose_errback * perr){
 
     EC_KEY * eckey = NULL;
